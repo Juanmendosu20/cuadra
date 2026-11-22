@@ -98,6 +98,22 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Meta mínima: además del −5 % y los $1.500.000, el flete debe caber en el ahorro
+-- (así el formulario de la app nunca ofrece una meta que luego se rechaza)
+-- ---------------------------------------------------------------------------
+create or replace function interno.objetivo_minimo(p_producto uuid) returns int
+language sql stable security definer set search_path = '' as $$
+  select min(c)::int
+    from generate_series(1, 1000) c, public.productos p
+    join public.proveedores pv on pv.id = p.proveedor_id
+   where p.id = p_producto
+     and interno.descuento(p_producto, c) >= interno.descuento_minimo()
+     and c * p.precio_lista_caja * (1 - interno.descuento(p_producto, c) / 100) >= interno.valor_minimo_pedido()
+     and pv.flete_por_entrega <= c * (p.precio_lista_caja
+                                      - round(p.precio_lista_caja * (1 - interno.descuento(p_producto, c) / 100)) - 1)
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Abrir: el flete tiene que caber en el ahorro de la meta
 -- ---------------------------------------------------------------------------
 create or replace function public.abrir_pedido(
