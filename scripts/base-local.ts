@@ -17,7 +17,7 @@ await db.exec(`insert into public.config (clave, valor)
 
 const cabeceras = {
   'access-control-allow-origin': '*',
-  'access-control-allow-headers': '*',
+  'access-control-allow-headers': 'authorization, apikey, content-type, x-client-info, accept-profile, content-profile, prefer',
   'access-control-allow-methods': 'POST, GET, OPTIONS',
   'content-type': 'application/json',
 };

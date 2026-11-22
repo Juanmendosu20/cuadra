@@ -69,3 +69,33 @@ El pedido de huevo abierto en Suba (a unos 15 km) no aparece para las tiendas de
 
 - Prueba de carga pequeña (12 solicitudes simultáneas); no se midió con cientos de usuarios.
 - Los pagos y precios son simulados; los resultados validan la lógica, no el valor comercial del ahorro (eso es la hipótesis H3, que requiere cotizaciones reales).
+
+## 6. Pruebas automáticas de la lógica en Postgres
+
+`npm test` monta en memoria una base Postgres (PGlite) con **las migraciones reales** y los datos demo, y verifica (11 pruebas, todas aprobadas):
+
+| Prueba | Resultado |
+|---|---|
+| Pedido demo de gaseosa: suma de cobros = valor de la orden ($1.747.480) y fletes 11.765 / 8.235 / 7.059 / 7.059 / 5.882 | ✅ |
+| No se puede abrir un pedido cuyo flete no cabe en el ahorro de la meta | ✅ |
+| Si un cobro superara lo retenido, el pedido se anula y se devuelve todo | ✅ |
+| Ciclo abierto → confirmado → entregado; lista de entrega solo para la anfitriona | ✅ |
+| **300 pedidos aleatorios** (semilla fija) abiertos, con reservas y cerrados: suma exacta en todos los confirmados y ningún cobro mayor que lo retenido | ✅ |
+| **10.000 repartos aleatorios** del flete (`lib/prorrateo.ts`) contra una referencia en enteros exactos: suma exacta, desvío < 1 peso | ✅ |
+
+El reparto de Postgres coincide además con `prorratear()` de la prueba de concepto en Python sobre el mismo pedido de gaseosa.
+
+## 7. Calidad en celular
+
+Auditoría con Lighthouse 12 (modo celular) sobre la versión compilada para producción, servida en local:
+
+| Categoría | Pantalla de ingreso |
+|---|---|
+| Rendimiento | 98 |
+| Accesibilidad | 100 |
+| Buenas prácticas | 96 |
+| SEO | 100 |
+
+Primer contenido visible en 0,8 s y desplazamiento de diseño 0. Además, **axe-core** no encontró problemas de accesibilidad (WCAG 2.1 AA) en ninguna de las 7 pantallas: ingreso, guía, pedidos, sumarse, historial con la explicación del cobro, lista de entrega y movimientos.
+
+**Limitación:** las mediciones son en local con una base en memoria; en el despliegue real los tiempos dependen de la red y de Supabase.
