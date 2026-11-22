@@ -97,7 +97,7 @@ export default function Encuesta() {
   }
 
   return (
-    <main className="app" style={{ paddingBlockStart: '1.5rem' }}>
+    <main className="app encuesta" style={{ paddingBlockStart: '1.5rem' }}>
       <div className="hero" style={{ marginBlockEnd: '1rem' }}>
         <span className="marca-logo"><Logo size={36} /><h1>Encuesta Cuadra</h1></span>
         <p className="sub">Universidad El Bosque · unos 10 minutos. Probamos la aplicación, no a usted.</p>

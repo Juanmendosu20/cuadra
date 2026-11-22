@@ -29,8 +29,11 @@ test('no deja abrir un pedido cuyo flete no cabe en el ahorro', async () => {
   await assert.rejects(
     rpc(db, 'abrir_pedido', { p_token: t, p_producto_id: arroz, p_cajas_objetivo: 30, p_horas: 24,
                               p_punto_acopio: 'Aquí', p_mis_cajas: 3 }),
-    /flete no cabe/,
+    /al menos \d+ cajas/,
   );
+  // El catálogo ya sube la meta mínima para que el flete quepa (lo que ve el formulario)
+  const cat = await rpc(db, 'catalogo', { p_token: t });
+  assert.ok(cat.find((c: any) => c.id === arroz).objetivo_minimo > 30);
   // Con una meta mayor el ahorro por caja sube (−12 % desde 60) y el flete sí cabe
   await rpc(db, 'abrir_pedido', { p_token: t, p_producto_id: arroz, p_cajas_objetivo: 80, p_horas: 24,
                                   p_punto_acopio: 'Aquí', p_mis_cajas: 3 });

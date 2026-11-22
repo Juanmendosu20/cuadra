@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "base:local": "node scripts/base-local.ts",
+    "dev:local": "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=local sh -c 'node scripts/base-local.ts & next dev'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",
