@@ -22,7 +22,7 @@ export default function Facilitador() {
         localStorage.removeItem('cuadra.sesion');
       } catch {}
       const hora = new Intl.DateTimeFormat('es-CO', { timeStyle: 'short', timeZone: 'America/Bogota' }).format(new Date());
-      setEstado({ tipo: 'ok', texto: `Demo reiniciada a las ${hora}. El arroz está en 18 de 30 cajas: ya puede pasar el siguiente participante.` });
+      setEstado({ tipo: 'ok', texto: `Demo reiniciada (${hora}). El arroz está en 18 de 30 cajas: ya puede pasar el siguiente participante.` });
     } catch (err) {
       setEstado({ tipo: 'error', texto: (err as Error).message });
     } finally {
