@@ -75,7 +75,7 @@ npm test                     # 11 pruebas: prorrateo, 10.000 escenarios y lógic
 ### Sin Supabase ni internet
 
 ```bash
-npm run dev:local            # base en memoria con las migraciones reales + app en http://localhost:3000
+npm run dev:local            # (Windows, Mac o Linux; Node 22.18+) base en memoria con las migraciones reales + app en http://localhost:3000
 ```
 
 Corre las migraciones sobre Postgres en memoria (PGlite) con los datos demo. La clave de `/facilitador` en local es `local`. Sirve de respaldo para la sustentación si falla la conexión.
