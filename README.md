@@ -15,6 +15,8 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 5. Con la tienda anfitriona (p. ej. *Tienda Doña Rosa* para el arroz) usa **Cerrar ahora (demo)** para ver la liquidación en *Historial*.
 6. Las tiendas de **Suba** no ven los pedidos de Timiza (filtro por zona).
 
+**Para entrevistas:** en `/facilitador` hay un botón que reinicia la demo (arroz en 18 de 30 cajas) con la clave del entrevistador, para que cada participante empiece igual. La clave no está en el repositorio.
+
 ## Qué incluye (alcance)
 
 | Incluido | Fuera de alcance |

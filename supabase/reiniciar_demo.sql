@@ -1,5 +1,4 @@
--- Deja la base como recién sembrada (antes de una demo o de una prueba con tenderos).
--- Ejecutar en el editor SQL de Supabase y después correr de nuevo 003_datos_demo.sql.
-truncate public.auditoria, public.participaciones, public.pedidos, public.sesiones,
-         public.escalas_precio, public.productos, public.proveedores, public.tiendas
-         restart identity cascade;
+-- Deja la base como recién sembrada. Lo normal es hacerlo desde la app, en /facilitador,
+-- con la clave del entrevistador (función public.reiniciar_demo, migración 005).
+-- Desde el editor SQL de Supabase también se puede llamar directamente:
+--   select public.reiniciar_demo('<clave del entrevistador>');
