@@ -104,7 +104,7 @@ export function TarjetaPedido({
               <dt className="ahorro">Ahorro</dt>
               <dd className="ahorro">{cop(mia.ahorro)}</dd>
             </dl>
-            <span className="sub">Cerró el {p.cerrado_en && fechaHora(p.cerrado_en)}.</span>
+            <span className="sub">Cerró el {p.cerrado_en && fechaHora(p.cerrado_en)}</span>
           </div>
         )}
 
