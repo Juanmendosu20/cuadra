@@ -8,6 +8,13 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 
 ## Probarlo
 
+La pantalla de entrada tiene dos botones para mostrar las dos partes del modelo, sin clave:
+
+- **Vista de tiendas:** se toca una tienda y se entra directo (o con PIN 1234, como en las entrevistas).
+- **Vista de proveedor** (`/proveedor`): el mayorista de ejemplo, *Mayorista Central S.A.S.*, ve la demanda que juntan las tiendas (pedidos en curso, órdenes por despachar, ventas y comisión del 3 %) y publica ofertas con descuentos por volumen, que aparecen de inmediato en la pestaña *Proveedores* de las tiendas. Es una vitrina de demostración: solo crea o retira sus propias ofertas nuevas (máximo 5), nunca ve cuántas cajas pidió cada tienda, y todo se borra al reiniciar la demo.
+
+Recorrido con PIN:
+
 1. Abre la URL del despliegue.
 2. Elige una tienda de **Timiza** y entra con el PIN **1234**.
 3. En *Abiertos* verás los pedidos a menos de 1,5 km. Toca **Sumarme al pedido**, elige cajas y reserva.

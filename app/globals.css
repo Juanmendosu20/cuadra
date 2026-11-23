@@ -397,3 +397,45 @@ textarea { min-block-size: auto; resize: vertical; }
   border: 0; background: transparent; cursor: pointer; font: inherit; font-size: 1.1rem; line-height: 1;
   color: var(--tinta-2); min-inline-size: 24px; min-block-size: 24px;
 }
+
+/* ---------- entrada: elegir vista ---------- */
+.vistas { display: grid; gap: 0.75rem; }
+.vista-opcion {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; align-items: center; text-align: start;
+  padding: 1rem 1.1rem; border-radius: var(--radio); border: 1.5px solid var(--linea); background: var(--papel);
+  box-shadow: var(--sombra); font: inherit; color: var(--tinta); cursor: pointer; text-decoration: none;
+}
+.vista-opcion strong { display: block; font-size: 1.1rem; color: var(--verde-900); }
+.vista-opcion .icono {
+  inline-size: 3.25rem; block-size: 3.25rem; border-radius: 14px; display: grid; place-items: center;
+  background: var(--verde-900); color: var(--ambar-500);
+}
+.vista-opcion:active { transform: scale(0.99); }
+@media (hover: hover) { .vista-opcion:hover { border-color: var(--verde-700); } }
+.grupo-tiendas h3 { font-size: 0.9rem; color: var(--tinta-2); margin-block: 0.75rem 0.4rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.grupo-tiendas ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.tienda-opcion {
+  inline-size: 100%; min-block-size: 52px; display: flex; justify-content: space-between; align-items: center;
+  padding: 0.6rem 0.9rem; border-radius: 12px; border: 1.5px solid var(--linea); background: var(--papel);
+  font: inherit; font-weight: 600; color: var(--tinta); cursor: pointer; text-align: start;
+}
+.tienda-opcion span { font-size: 1.3rem; color: var(--verde-700); }
+@media (hover: hover) { .tienda-opcion:hover { border-color: var(--verde-700); background: var(--verde-50); } }
+
+/* ---------- vista de proveedor ---------- */
+.nav-inferior.dos { grid-template-columns: repeat(2, 1fr); }
+.cifras-proveedor { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-block-end: 1rem; }
+.cifras-proveedor p {
+  display: grid; gap: 0.15rem; padding: 0.8rem 0.9rem; border-radius: 14px;
+  background: var(--verde-900); color: #fff;
+}
+.cifras-proveedor p.ancho { grid-column: span 2; }
+.cifras-proveedor strong { font-size: 1.5rem; line-height: 1.1; color: var(--ambar-500); }
+.cifras-proveedor .sub { color: rgb(255 255 255 / 0.85); }
+.escalones-form { display: grid; gap: 0.5rem; margin-block-end: 0.4rem; }
+.escalon-fila { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.escalon-fila label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.escalon-fila input { inline-size: 5rem; text-align: center; font-weight: 700; }
+
+.btn-salir.enlace { display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; flex: none; }
+.barra .marca-larga { font-size: 1rem; }
