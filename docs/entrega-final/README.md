@@ -4,7 +4,7 @@ Documentos finales del proyecto (Gestión de Tecnología e Innovación, Universi
 
 | Archivo | Qué es |
 |---|---|
-| `Cuadra_Informe_Entrega_Final.pdf` / `.docx` | Informe final (10 secciones, anexos y declaración de uso de IA) |
+| `Cuadra_Informe_Entrega_Final.docx` | Informe final (10 secciones, anexos y declaración de uso de IA) |
 | `Cuadra_Entrega1_corregida.docx` | Entrega 1 con las observaciones incorporadas |
 | `Cuadra_Instrumento_de_validacion.pdf` | Guion de tareas, encuesta y consentimiento de la prueba con tenderos |
 | `Cuadra_Kit_del_entrevistador.pdf` | Guía para quien aplica las entrevistas |
@@ -15,3 +15,5 @@ La clave del modo entrevistador y de `/admin` no está en estos archivos: se ent
 
 - Prototipo: https://cuadra.mendoza-juan.online
 - Código: este repositorio (ver el `README.md` de la raíz)
+| `Cuadra_Video_demo.mp4` | Video de respaldo de la demo (2:46) |
+| Presentación | Pitch de Cuadra (Canva), 20 diapositivas |
