@@ -1,6 +1,6 @@
 'use client';
 
-import { cop, fechaHora, relativo, cajas as nCajas } from '@/lib/formato';
+import { cop, fechaHora, relativo, cajas as nCajas, lugar, fechaHoraFin } from '@/lib/formato';
 import type { Pedido } from '@/lib/tipos';
 import { IconoCaja, IconoCheck } from './Iconos';
 
@@ -49,7 +49,7 @@ export function TarjetaPedido({
           Anfitriona: <strong>{p.soy_anfitrion ? 'tu tienda' : p.anfitrion}</strong> · a{' '}
           {Number(p.distancia_km).toLocaleString('es-CO')} km
           <br />
-          Entrega en: {p.punto_acopio}
+          Entrega en: {lugar(p.punto_acopio)}
         </p>
 
         <div className="avance">
@@ -211,18 +211,18 @@ function EstadoEntrega({ p, onEntrega }: { p: Pedido; onEntrega: (p: Pedido) => 
           </p>
         ) : mia?.retirado_en ? (
           <p>
-            <strong>Recogiste {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> el {fechaHora(mia.retirado_en)}.
+            <strong>Recogiste {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> el {fechaHoraFin(mia.retirado_en)}
           </p>
         ) : mia ? (
           <p>
-            <strong>Recoge {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> en {p.punto_acopio}.{' '}
+            <strong>Recoge {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> en {lugar(p.punto_acopio)}.{' '}
             <span className="sub">
               {p.retirados} de {p.participantes} tiendas ya recogieron.
             </span>
           </p>
         ) : null}
         {p.estado === 'entregado' && p.entregado_en && (
-          <p className="sub">Pedido entregado el {fechaHora(p.entregado_en)}.</p>
+          <p className="sub">Pedido entregado el {fechaHoraFin(p.entregado_en)}</p>
         )}
         {p.soy_anfitrion && (
           <button className="btn secundario compacto" type="button" onClick={() => onEntrega(p)}>
