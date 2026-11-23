@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { rpc, supabase } from '@/lib/supabase';
-import { cop, fechaHora } from '@/lib/formato';
+import { cop, fechaHora, cajas as nCajas } from '@/lib/formato';
 import type { Movimiento, Pedido, Producto, Sesion } from '@/lib/tipos';
 import { Ingreso } from '@/components/Ingreso';
 import { Logo } from '@/components/Logo';
@@ -212,7 +212,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
     await rpc('sumarse', { p_token: token, p_pedido_id: p.id, p_cajas: cajas });
     setSumarse(null);
     vibrar();
-    avisar(cajas === 0 ? 'Te retiraste del pedido.' : `Listo: ${cajas} cajas reservadas en ${p.producto}.`);
+    avisar(cajas === 0 ? 'Te retiraste del pedido.' : `Listo: ${nCajas(cajas)} en ${p.producto}.`);
     cargar();
   };
 
@@ -383,7 +383,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
                       <span>
                         <strong>{textoMovimiento(m)}</strong>
                         {m.producto && ` · ${m.producto}`}
-                        {typeof m.detalle?.cajas === 'number' && ` · ${m.detalle.cajas} cajas`}
+                        {typeof m.detalle?.cajas === 'number' && ` · ${nCajas(m.detalle.cajas)}`}
                       </span>
                       <span className="sub">{fechaHora(m.creado)}</span>
                     </li>

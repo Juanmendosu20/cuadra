@@ -1,6 +1,6 @@
 'use client';
 
-import { cop, fechaHora, relativo } from '@/lib/formato';
+import { cop, fechaHora, relativo, cajas as nCajas } from '@/lib/formato';
 import type { Pedido } from '@/lib/tipos';
 import { IconoCaja, IconoCheck } from './Iconos';
 
@@ -95,7 +95,7 @@ export function TarjetaPedido({
 
         {mia && p.estado === 'abierto' && (
           <div className="mia">
-            <strong>Tienes {mia.cajas} cajas reservadas.</strong>
+            <strong>Tienes {nCajas(mia.cajas)} {mia.cajas === 1 ? 'reservada' : 'reservadas'}.</strong>
             <span className="sub">
               {cop(mia.monto_reservado)} retenidos (simulado). Se ajusta al precio final al cerrar; si no se
               llega a la meta, se devuelve todo.
@@ -145,7 +145,7 @@ function Liquidacion({ p }: { p: Pedido }) {
       <strong>Pedido confirmado con −{p.descuento_actual}%</strong>
       <dl className="datos">
         <dt>
-          Mercancía ({mia.cajas} cajas × {cop(precio)})
+          Mercancía ({nCajas(mia.cajas)} × {cop(precio)})
         </dt>
         <dd>{cop(mia.valor_mercancia)}</dd>
         <dt>Tu parte del flete</dt>
@@ -166,7 +166,7 @@ function Liquidacion({ p }: { p: Pedido }) {
             −{p.descuento_actual}%: {cop(p.precio_lista_caja)} → <strong>{cop(precio)}</strong>.
           </li>
           <li>
-            <strong>Tu mercancía.</strong> {mia.cajas} cajas × {cop(precio)} = <strong>{cop(mia.valor_mercancia)}</strong>.
+            <strong>Tu mercancía.</strong> {nCajas(mia.cajas)} × {cop(precio)} = <strong>{cop(mia.valor_mercancia)}</strong>.
           </li>
           <li>
             <strong>Tu parte del flete.</strong> El flete de {cop(p.flete_total)} se reparte según las cajas de cada
@@ -211,11 +211,11 @@ function EstadoEntrega({ p, onEntrega }: { p: Pedido; onEntrega: (p: Pedido) => 
           </p>
         ) : mia?.retirado_en ? (
           <p>
-            <strong>Recogiste tus {mia.cajas} cajas</strong> el {fechaHora(mia.retirado_en)}.
+            <strong>Recogiste {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> el {fechaHora(mia.retirado_en)}.
           </p>
         ) : mia ? (
           <p>
-            <strong>Recoge tus {mia.cajas} cajas</strong> en {p.punto_acopio}.{' '}
+            <strong>Recoge {mia.cajas === 1 ? 'tu caja' : `tus ${mia.cajas} cajas`}</strong> en {p.punto_acopio}.{' '}
             <span className="sub">
               {p.retirados} de {p.participantes} tiendas ya recogieron.
             </span>
