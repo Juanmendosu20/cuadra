@@ -16,4 +16,4 @@ La clave del modo entrevistador y de `/admin` no está en estos archivos: se ent
 - Prototipo: https://cuadra.mendoza-juan.online
 - Código: este repositorio (ver el `README.md` de la raíz)
 | `Cuadra_Video_demo.mp4` | Video de respaldo de la demo (2:46) |
-| Presentación | Pitch de Cuadra (Canva), 20 diapositivas |
+| `Cuadra_Presentacion.pptx` | Presentación de la sustentación (20 diapositivas) |
