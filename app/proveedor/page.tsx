@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { rpc, supabase } from '@/lib/supabase';
 import { cop, fechaHora, relativo, cajas as nCajas } from '@/lib/formato';
-import { descuentoPara, objetivoMinimo, type Escalon } from '@/lib/prorrateo';
+import { descuentoPara, explicarMeta, type Escalon, type ExplicacionMeta } from '@/lib/prorrateo';
 import type { PedidoProveedor, ProductoVitrina, Vitrina } from '@/lib/tipos';
 import { Logo } from '@/components/Logo';
 import { Dialogo } from '@/components/Dialogo';
@@ -15,10 +15,23 @@ import { IconoCaja, IconoMas, IconoPedidos, IconoProveedores } from '@/component
 
 type Pestana = 'demanda' | 'ofertas';
 
+const CLAVE_PROVEEDOR = 'cuadra.proveedor-demo';
+
+/** Una frase con la regla que fija la meta mínima de cajas. */
+function porQueMeta(x: ExplicacionMeta, precio: number): string {
+  if (!x.meta) return 'Con estas escalas ningún pedido ahorra de verdad.';
+  if (x.limita === 'valor')
+    return `La fija el pedido mínimo de $1.500.000: con cajas de ${cop(precio)} hacen falta ${x.meta}.`;
+  if (x.limita === 'descuento') return `La fija el primer escalón con al menos −5 %.`;
+  return 'La fija el flete: con menos cajas no cabe en el ahorro.';
+}
+
 const ETIQUETA = { abierto: 'Juntando cajas', confirmado: 'Por despachar', entregado: 'Entregado', anulado: 'No se completó' } as const;
 
 export default function VistaProveedor() {
   const [datos, setDatos] = useState<Vitrina | null>(null);
+  const [proveedorId, setProveedorId] = useState<string | null>(null);
+  const [listo, setListo] = useState(false);
   const [pestana, setPestana] = useState<Pestana>('demanda');
   const [nueva, setNueva] = useState(false);
   const [error, setError] = useState('');
@@ -31,15 +44,40 @@ export default function VistaProveedor() {
     temporizador.current = setTimeout(() => setMensaje(''), 3500);
   };
 
-  const cargar = useCallback(async () => {
+  // Recuerda qué proveedor se estaba viendo en este celular
+  useEffect(() => {
     try {
-      setDatos(await rpc<Vitrina>('vitrina_proveedor'));
+      setProveedorId(localStorage.getItem(CLAVE_PROVEEDOR));
+    } catch {}
+    setListo(true);
+  }, []);
+
+  const cambiarProveedor = (id: string) => {
+    try {
+      localStorage.setItem(CLAVE_PROVEEDOR, id);
+    } catch {}
+    setDatos(null);
+    setProveedorId(id);
+  };
+
+  const cargar = useCallback(async () => {
+    if (!listo) return;
+    try {
+      setDatos(await rpc<Vitrina>('vitrina_proveedor', proveedorId ? { p_proveedor_id: proveedorId } : {}));
       setError('');
     } catch (e) {
       const m = (e as Error).message;
+      if (proveedorId && /No se encontró el proveedor/.test(m)) {
+        // El proveedor guardado ya no existe (p. ej., tras reiniciar la demo): volver al de siempre
+        try {
+          localStorage.removeItem(CLAVE_PROVEEDOR);
+        } catch {}
+        setProveedorId(null);
+        return;
+      }
       setError(/fetch|network|Failed/i.test(m) ? 'No pudimos conectarnos. Revisa los datos o el wifi.' : m);
     }
-  }, []);
+  }, [listo, proveedorId]);
 
   useEffect(() => {
     cargar();
@@ -57,7 +95,17 @@ export default function VistaProveedor() {
   async function retirar(p: ProductoVitrina) {
     try {
       await rpc('vitrina_eliminar_oferta', { p_producto_id: p.id });
-      avisar(`Retiraste la oferta de ${p.nombre}.`);
+      avisar(`Retiraste ${p.nombre}: las tiendas ya no lo ven ni pueden abrir pedidos nuevos.`);
+      cargar();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function publicar(p: ProductoVitrina) {
+    try {
+      await rpc('vitrina_publicar_oferta', { p_producto_id: p.id });
+      avisar(`${p.nombre} vuelve a estar en oferta.`);
       cargar();
     } catch (e) {
       setError((e as Error).message);
@@ -85,7 +133,7 @@ export default function VistaProveedor() {
         </Link>
       </header>
 
-      <div className="app">
+      <main className="app">
         {error && (
           <div className="aviso error fila" role="alert">
             <span>{error}</span>
@@ -93,10 +141,23 @@ export default function VistaProveedor() {
           </div>
         )}
 
+        {datos && datos.proveedores.length > 1 && (
+          <div className="campo selector-proveedor">
+            <label htmlFor="sel-proveedor">Ver como</label>
+            <select id="sel-proveedor" value={datos.proveedor.id} onChange={(e) => cambiarProveedor(e.target.value)}>
+              {datos.proveedores.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.nombre} · {x.categoria}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {!datos && !error && <p className="vacio" aria-busy="true">Cargando la demanda del barrio…</p>}
 
         {datos && pestana === 'demanda' && (
-          <main>
+          <section>
             <h1 className="titulo-vista">Demanda de tus productos</h1>
             <p className="sub" style={{ marginBlockEnd: '0.85rem' }}>
               Las tiendas de cada barrio juntan sus cajas en un solo pedido. Tú recibes una orden consolidada, con una
@@ -119,23 +180,30 @@ export default function VistaProveedor() {
                 {[...activos, ...cerrados].map((p) => <TarjetaDemanda key={p.id} p={p} />)}
               </ul>
             )}
-          </main>
+          </section>
         )}
 
         {datos && pestana === 'ofertas' && (
-          <main>
+          <section>
             <div className="encabezado-vista">
               <h1 className="titulo-vista">Mis ofertas</h1>
-              <button className="btn-abrir" type="button" onClick={() => setNueva(true)}>
-                <IconoMas size={20} />
-                Nueva oferta
-              </button>
+              {pv!.editable && (
+                <button className="btn-abrir" type="button" onClick={() => setNueva(true)}>
+                  <IconoMas size={20} />
+                  Nueva oferta
+                </button>
+              )}
             </div>
             <p className="sub" style={{ marginBlockEnd: '0.85rem' }}>
               Cada oferta dice cuánto bajas el precio cuando el barrio junta más cajas. Las tiendas la ven en su
               pestaña Proveedores y pueden abrir un pedido conjunto con ella. Flete por entrega:{' '}
               {cop(pv!.flete_por_entrega)} · Entregas en {pv!.cobertura}.
             </p>
+            {!pv!.editable && (
+              <p className="aviso" style={{ marginBlockEnd: '0.85rem' }}>
+                Este proveedor lo carga el equipo en /admin con su cotización verificada: aquí solo se puede ver.
+              </p>
+            )}
             <ul className="lista">
               {datos.productos.map((p) => (
                 <li key={p.id}>
@@ -145,31 +213,45 @@ export default function VistaProveedor() {
                         <h2 id={`of-${p.id}`}>{p.nombre}</h2>
                         <p className="sub">{p.empaque} · lista {cop(p.precio_lista_caja)}/caja</p>
                       </div>
-                      {p.origen === 'vitrina' && <span className="etiqueta abierto">Nueva</span>}
+                      {!p.activo ? (
+                        <span className="etiqueta anulado">Retirada</span>
+                      ) : (
+                        p.origen === 'vitrina' && <span className="etiqueta abierto">Nueva</span>
+                      )}
                     </header>
                     <ul className="escalones" aria-label={`Descuentos por volumen de ${p.nombre}`}>
                       {p.escalas.map((e) => <li key={e.cajas_min}>{e.cajas_min}+ cajas: −{e.descuento_pct}%</li>)}
                     </ul>
                     <p className="sub">
                       {p.objetivo_minimo
-                        ? `Un pedido conjunto ahorra desde ${p.objetivo_minimo} cajas entre todas las tiendas.`
-                        : 'Con estas escalas ningún pedido ahorra de verdad.'}{' '}
+                        ? `Un pedido conjunto ahorra desde ${p.objetivo_minimo} cajas entre todas las tiendas. `
+                        : ''}
+                      {porQueMeta(explicarMeta(p.escalas, p.precio_lista_caja, pv!.flete_por_entrega), p.precio_lista_caja)}{' '}
                       {p.pedidos > 0 && `${p.pedidos} ${p.pedidos === 1 ? 'pedido' : 'pedidos'} de tiendas.`}
                     </p>
-                    {p.origen === 'vitrina' && p.pedidos === 0 && (
+                    {!p.activo && (
+                      <p className="sub">Las tiendas no la ven y no pueden abrir pedidos nuevos; los que ya estaban siguen su curso.</p>
+                    )}
+                    {pv!.editable && (
                       <div className="acciones">
-                        <button className="btn peligro compacto" type="button" onClick={() => retirar(p)}>
-                          Retirar oferta
-                        </button>
+                        {p.activo ? (
+                          <button className="btn peligro compacto" type="button" onClick={() => retirar(p)}>
+                            Retirar oferta
+                          </button>
+                        ) : (
+                          <button className="btn secundario compacto" type="button" onClick={() => publicar(p)}>
+                            Volver a publicar
+                          </button>
+                        )}
                       </div>
                     )}
                   </article>
                 </li>
               ))}
             </ul>
-          </main>
+          </section>
         )}
-      </div>
+      </main>
 
       <nav className="nav-inferior dos" aria-label="Secciones">
         {(
@@ -194,6 +276,7 @@ export default function VistaProveedor() {
       {pv && (
         <DialogoOferta
           abierto={nueva}
+          proveedorId={pv.id}
           flete={pv.flete_por_entrega}
           onCerrar={() => setNueva(false)}
           onPublicada={(nombre, meta) => {
@@ -268,9 +351,10 @@ function TarjetaDemanda({ p }: { p: PedidoProveedor }) {
 
 /** Formulario para publicar una oferta con precios por volumen. */
 function DialogoOferta({
-  abierto, flete, onCerrar, onPublicada,
+  abierto, proveedorId, flete, onCerrar, onPublicada,
 }: {
   abierto: boolean;
+  proveedorId: string;
   flete: number;
   onCerrar: () => void;
   onPublicada: (nombre: string, meta: number) => void;
@@ -278,15 +362,16 @@ function DialogoOferta({
   const id = useId();
   return (
     <Dialogo abierto={abierto} onCerrar={onCerrar} tituloId={`${id}-t`}>
-      <FormOferta tituloId={`${id}-t`} flete={flete} onCerrar={onCerrar} onPublicada={onPublicada} />
+      <FormOferta key={proveedorId} tituloId={`${id}-t`} proveedorId={proveedorId} flete={flete} onCerrar={onCerrar} onPublicada={onPublicada} />
     </Dialogo>
   );
 }
 
 function FormOferta({
-  tituloId, flete, onCerrar, onPublicada,
+  tituloId, proveedorId, flete, onCerrar, onPublicada,
 }: {
   tituloId: string;
+  proveedorId: string;
   flete: number;
   onCerrar: () => void;
   onPublicada: (nombre: string, meta: number) => void;
@@ -302,7 +387,8 @@ function FormOferta({
   const [enviando, setEnviando] = useState(false);
 
   const ordenadas = [...escalas].sort((a, b) => a.cajas_min - b.cajas_min);
-  const meta = precio > 0 ? objetivoMinimo(ordenadas, precio, flete) : null;
+  const explicacion = precio > 0 ? explicarMeta(ordenadas, precio, flete) : null;
+  const meta = explicacion?.meta ?? null;
   const dMeta = meta ? descuentoPara(ordenadas, meta) : 0;
 
   const cambiar = (i: number, campo: keyof Escalon, v: string) =>
@@ -314,7 +400,7 @@ function FormOferta({
     setError('');
     try {
       const r = await rpc<{ id: string; objetivo_minimo: number }>('vitrina_crear_oferta', {
-        p_nombre: nombre, p_empaque: empaque, p_precio: precio, p_escalas: ordenadas,
+        p_nombre: nombre, p_empaque: empaque, p_precio: precio, p_escalas: ordenadas, p_proveedor_id: proveedorId,
       });
       onPublicada(nombre.trim(), r.objetivo_minimo);
     } catch (err) {
@@ -338,8 +424,13 @@ function FormOferta({
       </div>
       <div className="campo">
         <label htmlFor="of-precio">Precio de lista por caja (COP)</label>
-        <input id="of-precio" inputMode="numeric" required value={precio || ''}
+        <input id="of-precio" inputMode="numeric" required value={precio || ''} aria-describedby="of-precio-ayuda"
           onChange={(e) => setPrecio(Number(e.target.value.replace(/\D/g, '')) || 0)} />
+        <span id="of-precio-ayuda" className="ayuda">
+          {precio > 0 && precio < 15000
+            ? `¿Seguro que es la caja completa? ${cop(precio)} parece el precio de una unidad, y con eso la meta sube mucho.`
+            : 'El precio de la caja o paca completa, no el de una unidad.'}
+        </span>
       </div>
 
       <fieldset>
@@ -376,11 +467,26 @@ function FormOferta({
         )}
       </fieldset>
 
-      <p className={meta ? 'aviso exito' : 'aviso'} aria-live="polite">
-        {meta
-          ? `Con estas escalas, un pedido conjunto ahorra desde ${meta} cajas (−${dMeta}%, ${cop(Math.round(meta * precio * (1 - dMeta / 100)))}).`
-          : 'Con estas escalas ningún pedido ahorra de verdad: hace falta al menos −5 %, un pedido de $1.500.000 y que el flete quepa en el ahorro.'}
-      </p>
+      <div className={meta ? 'aviso exito' : 'aviso'} aria-live="polite">
+        <p>
+          {meta
+            ? `Con estas escalas, un pedido conjunto ahorra desde ${meta} cajas (−${dMeta}%, ${cop(Math.round(meta * precio * (1 - dMeta / 100)))}).`
+            : 'Con estas escalas ningún pedido ahorra de verdad.'}
+        </p>
+        {explicacion && (
+          <ul className="reglas-meta">
+            <li className={explicacion.limita === 'descuento' ? 'fija' : undefined}>
+              Descuento de al menos 5 %: {explicacion.porDescuento ? `desde ${explicacion.porDescuento} cajas` : 'ningún escalón llega'}
+            </li>
+            <li className={explicacion.limita === 'valor' ? 'fija' : undefined}>
+              Pedido de $1.500.000 o más: {explicacion.porValor ? `desde ${explicacion.porValor} cajas` : 'más de 1.000 cajas'}
+            </li>
+            <li className={explicacion.limita === 'flete' ? 'fija' : undefined}>
+              Flete de {cop(flete)} cubierto por el ahorro: {explicacion.porFlete ? `desde ${explicacion.porFlete} cajas` : 'no alcanza'}
+            </li>
+          </ul>
+        )}
+      </div>
 
       {error && <p className="aviso error" role="alert" style={{ marginBlockStart: '0.75rem' }}>{error}</p>}
 

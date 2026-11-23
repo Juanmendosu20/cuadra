@@ -11,7 +11,7 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 La pantalla de entrada tiene dos botones para mostrar las dos partes del modelo, sin clave:
 
 - **Vista de tiendas:** se toca una tienda y se entra directo (o con PIN 1234, como en las entrevistas).
-- **Vista de proveedor** (`/proveedor`): el mayorista de ejemplo, *Mayorista Central S.A.S.*, ve la demanda que juntan las tiendas (pedidos en curso, órdenes por despachar, ventas y comisión del 3 %) y publica ofertas con descuentos por volumen, que aparecen de inmediato en la pestaña *Proveedores* de las tiendas. Es una vitrina de demostración: solo crea o retira sus propias ofertas nuevas (máximo 5), nunca ve cuántas cajas pidió cada tienda, y todo se borra al reiniciar la demo.
+- **Vista de proveedor** (`/proveedor`): con el selector «Ver como» se elige el proveedor (por defecto *Mayorista Central S.A.S.*). Ve la demanda que juntan las tiendas (pedidos en curso, órdenes por despachar, ventas y comisión del 3 %) y publica ofertas con descuentos por volumen, que aparecen de inmediato en la pestaña *Proveedores* de las tiendas. Puede retirar cualquier oferta (deja de verse y no se abren pedidos nuevos; los existentes siguen) y volver a publicarla. Cada oferta explica qué regla fija su meta mínima (−5 %, pedido de $1.500.000 o flete). Es una vitrina de demostración: solo edita los proveedores de la demo (los cargados en `/admin` solo se ven), máximo 5 ofertas nuevas por proveedor, nunca ve cuántas cajas pidió cada tienda, y el reinicio de la demo lo deja todo como estaba.
 
 Recorrido con PIN:
 

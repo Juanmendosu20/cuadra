@@ -44,11 +44,35 @@ test('una oferta publicada aparece para las tiendas y se puede retirar', async (
   assert.ok(!v.productos.some((p: any) => p.nombre === 'Panela 500 g'));
 });
 
-test('la vitrina no puede tocar productos base ni pasar el límite', async () => {
+test('retirar una oferta con pedidos la deja de ofrecer sin romper los pedidos', async () => {
   const db = await montarBase();
-  const v = await rpc(db, 'vitrina_proveedor');
+  const t = await entrar(db, 'Tienda Carmencita');
+  let v = await rpc(db, 'vitrina_proveedor');
   const arroz = v.productos.find((p: any) => p.nombre === 'Arroz blanco 500 g');
-  await assert.rejects(rpc(db, 'vitrina_eliminar_oferta', { p_producto_id: arroz.id }), /creadas en esta demo/);
+  await rpc(db, 'vitrina_eliminar_oferta', { p_producto_id: arroz.id });
+
+  v = await rpc(db, 'vitrina_proveedor');
+  assert.equal(v.productos.find((p: any) => p.id === arroz.id).activo, false);
+  const cat = await rpc(db, 'catalogo', { p_token: t });
+  assert.ok(!cat.some((c: any) => c.id === arroz.id));
+  const provs = await rpc(db, 'listar_proveedores', { p_token: t });
+  assert.ok(!provs.some((pv: any) => pv.productos.some((p: any) => p.id === arroz.id)));
+  await assert.rejects(
+    rpc(db, 'abrir_pedido', { p_token: t, p_producto_id: arroz.id, p_cajas_objetivo: 30, p_horas: 24,
+                              p_punto_acopio: 'Aquí', p_mis_cajas: 3 }),
+    /ya no está en oferta/,
+  );
+  // El pedido de arroz que ya estaba abierto sigue ahí
+  const pedidos = await rpc(db, 'listar_pedidos', { p_token: t });
+  assert.ok(pedidos.some((p: any) => p.producto === 'Arroz blanco 500 g' && p.estado === 'abierto'));
+
+  await rpc(db, 'vitrina_publicar_oferta', { p_producto_id: arroz.id });
+  const cat2 = await rpc(db, 'catalogo', { p_token: t });
+  assert.ok(cat2.some((c: any) => c.id === arroz.id));
+});
+
+test('la vitrina rechaza escalas sin ahorro y respeta el límite', async () => {
+  const db = await montarBase();
 
   // Escalas que no ahorran de verdad no se publican
   await assert.rejects(
@@ -58,7 +82,7 @@ test('la vitrina no puede tocar productos base ni pasar el límite', async () =>
   );
 
   for (let i = 1; i <= 5; i++) await rpc(db, 'vitrina_crear_oferta', { ...OFERTA, p_nombre: `Oferta ${i}` });
-  await assert.rejects(rpc(db, 'vitrina_crear_oferta', { ...OFERTA, p_nombre: 'Oferta 6' }), /hasta 5 ofertas/);
+  await assert.rejects(rpc(db, 'vitrina_crear_oferta', { ...OFERTA, p_nombre: 'Oferta 6' }), /hasta 5 ofertas nuevas por proveedor/);
 });
 
 test('reiniciar la demo borra las ofertas de la vitrina', async () => {
@@ -72,13 +96,33 @@ test('reiniciar la demo borra las ofertas de la vitrina', async () => {
   assert.ok(v.productos.some((p: any) => p.nombre === 'Arroz blanco 500 g'));
 });
 
-test('una oferta con pedidos de tiendas ya no se puede retirar', async () => {
+test('una oferta nueva con pedidos se retira sin borrarse', async () => {
   const db = await montarBase();
   const r = await rpc(db, 'vitrina_crear_oferta', OFERTA);
   const t = await entrar(db, 'Tienda Carmencita');
   await rpc(db, 'abrir_pedido', { p_token: t, p_producto_id: r.id, p_cajas_objetivo: r.objetivo_minimo,
                                   p_horas: 24, p_punto_acopio: 'Tienda Carmencita', p_mis_cajas: 3 });
-  await assert.rejects(rpc(db, 'vitrina_eliminar_oferta', { p_producto_id: r.id }), /ya tiene pedidos/);
+  await rpc(db, 'vitrina_eliminar_oferta', { p_producto_id: r.id });
   const v = await rpc(db, 'vitrina_proveedor');
+  assert.equal(v.productos.find((p: any) => p.id === r.id).activo, false);
   assert.ok(v.pedidos.some((p: any) => p.producto === 'Panela 500 g' && p.estado === 'abierto'));
+});
+
+test('se puede elegir otro proveedor de demo; los de /admin solo se ven', async () => {
+  const db = await montarBase();
+  await db.exec(`insert into public.config (clave, valor)
+                 values ('clave_facilitador', extensions.crypt('prueba', extensions.gen_salt('bf')))`);
+  const v0 = await rpc(db, 'vitrina_proveedor');
+  assert.equal(v0.proveedores.length, 3);
+  const granos = v0.proveedores.find((p: any) => p.nombre.startsWith('Distribuidora Granos'));
+  const vg = await rpc(db, 'vitrina_proveedor', { p_proveedor_id: granos.id });
+  assert.equal(vg.proveedor.editable, true);
+  assert.ok(vg.productos.some((p: any) => p.nombre === 'Lenteja 500 g'));
+  await rpc(db, 'vitrina_crear_oferta', { ...OFERTA, p_proveedor_id: granos.id });
+
+  const adm = await rpc<string>(db, 'admin_crear_proveedor', { p_clave: 'prueba', p_nombre: 'Lácteos Zonales',
+    p_categoria: 'Abarrotes', p_cobertura: 'Kennedy', p_flete: 30000 });
+  const va = await rpc(db, 'vitrina_proveedor', { p_proveedor_id: adm });
+  assert.equal(va.proveedor.editable, false);
+  await assert.rejects(rpc(db, 'vitrina_crear_oferta', { ...OFERTA, p_proveedor_id: adm }), /lo administra el equipo/);
 });

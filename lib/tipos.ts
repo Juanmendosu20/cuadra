@@ -123,10 +123,11 @@ export type PedidoProveedor = {
   comision: number | null;
 };
 
-export type ProductoVitrina = ProductoProveedor & { origen: 'base' | 'vitrina' };
+export type ProductoVitrina = ProductoProveedor & { origen: 'base' | 'vitrina'; activo: boolean };
 
 export type Vitrina = {
-  proveedor: { id: string; nombre: string; categoria: string; cobertura: string; flete_por_entrega: number };
+  proveedor: { id: string; nombre: string; categoria: string; cobertura: string; flete_por_entrega: number; editable: boolean };
+  proveedores: { id: string; nombre: string; categoria: string }[];
   productos: ProductoVitrina[];
   pedidos: PedidoProveedor[];
   resumen: {

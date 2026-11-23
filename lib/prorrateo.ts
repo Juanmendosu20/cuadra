@@ -66,3 +66,33 @@ export function objetivoMinimo(escalas: Escalon[], precioLista: number, flete: n
   }
   return null;
 }
+
+export type ExplicacionMeta = {
+  meta: number | null;
+  /** Cajas mínimas que exige cada regla por separado */
+  porDescuento: number | null;
+  porValor: number | null;
+  porFlete: number | null;
+  /** Qué regla fija la meta (la más exigente) */
+  limita: 'descuento' | 'valor' | 'flete' | null;
+};
+
+/** Explica de dónde sale la meta mínima: cuál de las tres reglas la fija. */
+export function explicarMeta(escalas: Escalon[], precioLista: number, flete: number): ExplicacionMeta {
+  let porDescuento: number | null = null, porValor: number | null = null, porFlete: number | null = null;
+  for (let c = 1; c <= 1000; c++) {
+    const d = descuentoPara(escalas, c);
+    const precio = Math.round(precioLista * (1 - d / 100));
+    if (porDescuento === null && d >= 5) porDescuento = c;
+    if (porValor === null && c * precioLista * (1 - d / 100) >= 1_500_000) porValor = c;
+    if (porFlete === null && d > 0 && flete <= c * (precioLista - precio - 1)) porFlete = c;
+  }
+  const meta = objetivoMinimo(escalas, precioLista, flete);
+  let limita: ExplicacionMeta['limita'] = null;
+  if (meta !== null) {
+    if (porValor === meta) limita = 'valor';
+    else if (porDescuento === meta) limita = 'descuento';
+    else limita = 'flete';
+  }
+  return { meta, porDescuento, porValor, porFlete, limita };
+}
