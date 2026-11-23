@@ -206,3 +206,9 @@ dialog .pie { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: 
   z-index: 4; pointer-events: none; }
 .estado-vivo p { background: var(--tinta); color: #fff; padding: 0.7rem 1rem; border-radius: 12px; text-align: center;
   box-shadow: var(--sombra); }
+
+/* ---------- encuesta ---------- */
+form h2 { margin-block: 1.75rem 0.75rem; font-size: 1.2rem; color: var(--verde-900); }
+form h2:first-child { margin-block-start: 0; }
+form h3 { margin-block: 1.25rem 0.25rem; font-size: 1.05rem; }
+textarea { min-block-size: auto; resize: vertical; }
