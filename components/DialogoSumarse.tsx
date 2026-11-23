@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { cop } from '@/lib/formato';
+import { cop, cajas as nCajas } from '@/lib/formato';
 import { estimarPago } from '@/lib/prorrateo';
 import type { Pedido } from '@/lib/tipos';
 import { Dialogo } from './Dialogo';
@@ -148,7 +148,7 @@ function Contenido({
           Cancelar
         </button>
         <button className="btn" type="submit" disabled={enviando || !valido}>
-          {enviando ? 'Guardando…' : `Reservar ${valido ? cajas : ''} cajas`}
+          {enviando ? 'Guardando…' : valido ? `Reservar ${nCajas(cajas)}` : 'Reservar'}
         </button>
       </div>
     </form>

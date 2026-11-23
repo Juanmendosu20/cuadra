@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState } from 'react';
 import { rpc } from '@/lib/supabase';
+import { cajas as nCajas } from '@/lib/formato';
 import type { ItemEntrega, Pedido } from '@/lib/tipos';
 import { Dialogo } from './Dialogo';
 import { IconoCheck } from './Iconos';
@@ -116,7 +117,7 @@ function Lista({
                     <span className="nombre">
                       {i.es_mia ? `${i.tienda} (tu tienda)` : i.tienda}
                     </span>
-                    <span className="cajas">{i.cajas} cajas</span>
+                    <span className="cajas">{nCajas(i.cajas)}</span>
                     <span className="visually-hidden">{hecho ? ', ya recogió' : ', pendiente'}</span>
                   </button>
                 </li>
