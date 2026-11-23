@@ -10,7 +10,7 @@ import { Logo } from '@/components/Logo';
 import { Dialogo } from '@/components/Dialogo';
 import { IconoCaja, IconoMas, IconoPedidos, IconoProveedores } from '@/components/Iconos';
 
-// Vista de proveedor para la demostración: el mayorista de ejemplo ve la demanda que
+// Vista de proveedor para la demostración: el mayorista de la demo ve la demanda que
 // juntan las tiendas y publica ofertas por volumen. Sin clave; solo actúa sobre sus ofertas nuevas.
 
 type Pestana = 'demanda' | 'ofertas';

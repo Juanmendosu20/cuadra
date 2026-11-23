@@ -13,7 +13,7 @@ const PIN_DEMO = '1234';
 /**
  * Entrada a la demo. Dos vistas para mostrar las dos partes del modelo:
  *  · Tiendas: se toca una tienda y se entra sin escribir el PIN (o con PIN, como en las entrevistas).
- *  · Proveedor: /proveedor, la vitrina del mayorista de ejemplo.
+ *  · Proveedor: /proveedor, la vitrina del mayorista de la demo.
  */
 export function Ingreso({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   const [tiendas, setTiendas] = useState<Tienda[]>([]);

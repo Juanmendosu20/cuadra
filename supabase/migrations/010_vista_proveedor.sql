@@ -4,7 +4,7 @@
 -- de un barrio juntan su demanda, y cómo publica una oferta con precios por volumen.
 --
 -- Es una VITRINA de demostración, no un acceso real de proveedores:
---   · Actúa siempre sobre el proveedor de ejemplo «Mayorista Central S.A.S.».
+--   · Actúa siempre sobre el proveedor de la demo «Mayorista Central S.A.S.».
 --   · Solo crea y borra sus propias ofertas nuevas (origen = 'vitrina'), máximo 5.
 --   · No toca los productos base ni los pedidos; el reinicio de la demo las borra.
 --   · Ve los pedidos de sus productos en agregado: cajas, tiendas y valor de la orden,
@@ -25,7 +25,7 @@ create or replace function public.vitrina_proveedor() returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare v_pv uuid := interno.proveedor_vitrina();
 begin
-  if v_pv is null then raise exception 'La demo no tiene proveedor de ejemplo. Reinicia la demo.'; end if;
+  if v_pv is null then raise exception 'No se encontró el proveedor de la demo. Reinicia la demo.'; end if;
   perform interno.cerrar_vencidos();
   return (
     with ped as (
@@ -90,7 +90,7 @@ declare
   v_malas int;
   v_min   int;
 begin
-  if v_pv is null then raise exception 'La demo no tiene proveedor de ejemplo. Reinicia la demo.'; end if;
+  if v_pv is null then raise exception 'No se encontró el proveedor de la demo. Reinicia la demo.'; end if;
   if (select count(*) from public.productos where proveedor_id = v_pv and origen = 'vitrina') >= 5 then
     raise exception 'La demo admite hasta 5 ofertas nuevas. Borra una o reinicia la demo.';
   end if;
