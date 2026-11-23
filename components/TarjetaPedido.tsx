@@ -121,7 +121,7 @@ export function TarjetaPedido({
             </button>
             {p.soy_anfitrion && (
               <button className="btn secundario" type="button" onClick={() => onCerrar(p)}>
-                Cerrar ahora (demo)
+                Cerrar ahora
               </button>
             )}
           </div>

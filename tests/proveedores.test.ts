@@ -10,7 +10,7 @@ async function base() {
   return db;
 }
 
-test('las tiendas ven el directorio con los proveedores de ejemplo', async () => {
+test('las tiendas ven el directorio con los proveedores de la demo', async () => {
   const db = await base();
   const t = await entrar(db, 'Tienda Carmencita');
   const provs = await rpc(db, 'listar_proveedores', { p_token: t });
@@ -34,7 +34,7 @@ test('el administrador crea proveedor y producto; sin clave no puede', async () 
     /Clave incorrecta/,
   );
   const id = await rpc<string>(db, 'admin_crear_proveedor', {
-    p_clave: 'prueba', p_nombre: 'Lácteos Zonales (ejemplo)', p_categoria: 'Lácteos',
+    p_clave: 'prueba', p_nombre: 'Lácteos Zonales', p_categoria: 'Lácteos',
     p_cobertura: 'Kennedy', p_flete: 30000 });
   const r = await rpc(db, 'admin_crear_producto', {
     p_clave: 'prueba', p_proveedor_id: id, p_nombre: 'Leche UHT 1 L', p_empaque: 'paca x 6 und.',
@@ -45,7 +45,7 @@ test('el administrador crea proveedor y producto; sin clave no puede', async () 
 test('rechaza escalas que nunca ahorran o cuyo descuento baja con el volumen', async () => {
   const db = await base();
   const id = await rpc<string>(db, 'admin_crear_proveedor', {
-    p_clave: 'prueba', p_nombre: 'Prueba (ejemplo)', p_categoria: 'Aseo', p_cobertura: 'Kennedy', p_flete: 30000 });
+    p_clave: 'prueba', p_nombre: 'Prueba', p_categoria: 'Aseo', p_cobertura: 'Kennedy', p_flete: 30000 });
   const producto = { p_clave: 'prueba', p_proveedor_id: id, p_nombre: 'Detergente 1 kg',
                      p_empaque: 'caja x 12 und.', p_precio: 90000 };
   await assert.rejects(
@@ -70,7 +70,7 @@ test('no se borra un producto que ya tiene pedidos', async () => {
 test('reiniciar la demo conserva los proveedores del administrador', async () => {
   const db = await base();
   const id = await rpc<string>(db, 'admin_crear_proveedor', {
-    p_clave: 'prueba', p_nombre: 'Lácteos Zonales (ejemplo)', p_categoria: 'Lácteos',
+    p_clave: 'prueba', p_nombre: 'Lácteos Zonales', p_categoria: 'Lácteos',
     p_cobertura: 'Kennedy', p_flete: 30000 });
   await rpc(db, 'admin_crear_producto', {
     p_clave: 'prueba', p_proveedor_id: id, p_nombre: 'Leche UHT 1 L', p_empaque: 'paca x 6 und.',
@@ -78,6 +78,26 @@ test('reiniciar la demo conserva los proveedores del administrador', async () =>
   await rpc(db, 'reiniciar_demo', { p_clave: 'prueba' });
   const provs = await rpc(db, 'admin_listar_proveedores', { p_clave: 'prueba' });
   assert.equal(provs.length, 4);
-  const lacteos = provs.find((p: any) => p.nombre === 'Lácteos Zonales (ejemplo)');
+  const lacteos = provs.find((p: any) => p.nombre === 'Lácteos Zonales');
   assert.equal(lacteos.productos[0].escalas.length, 2);
+});
+
+test('categorías administrables y nombres sin «ejemplo» ni «ficticio»', async () => {
+  const db = await base();
+  const provs = await rpc(db, 'admin_listar_proveedores', { p_clave: 'prueba' });
+  for (const pv of provs) assert.doesNotMatch(pv.nombre, /ejemplo|ficticio/i);
+  await assert.rejects(
+    rpc(db, 'admin_crear_proveedor', { p_clave: 'prueba', p_nombre: 'Frutas Andinas', p_categoria: 'Frutas',
+                                       p_cobertura: 'Kennedy: Timiza', p_flete: 20000 }),
+    /Elige una categoría/,
+  );
+  await rpc(db, 'admin_crear_categoria', { p_clave: 'prueba', p_nombre: 'frutas' });
+  assert.ok((await rpc(db, 'admin_categorias', { p_clave: 'prueba' })).includes('Frutas'));
+  await rpc(db, 'admin_crear_proveedor', { p_clave: 'prueba', p_nombre: 'Frutas Andinas', p_categoria: 'Frutas',
+                                           p_cobertura: 'Kennedy: Timiza', p_flete: 20000 });
+  // Después de reiniciar la demo tampoco vuelven los nombres viejos
+  await rpc(db, 'reiniciar_demo', { p_clave: 'prueba' });
+  const otra = await rpc(db, 'admin_listar_proveedores', { p_clave: 'prueba' });
+  for (const pv of otra) assert.doesNotMatch(pv.nombre, /ejemplo|ficticio/i);
+  assert.ok(otra.some((p: any) => p.nombre === 'Frutas Andinas'));
 });

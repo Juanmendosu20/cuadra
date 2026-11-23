@@ -18,7 +18,7 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 
 **Para entrevistas:** en `/facilitador` hay un botón que reinicia la demo (arroz en 18 de 30 cajas) con la clave del entrevistador, para que cada participante empiece igual. La clave no está en el repositorio.
 
-**Proveedores:** las tiendas ven en la pestaña *Proveedores* los proveedores verificados, sus productos y sus descuentos por volumen, y pueden abrir un pedido desde ahí. Los proveedores no se registran solos: el equipo los da de alta en `/admin` (misma clave del entrevistador) después de verificar la cotización escrita. La base rechaza escalas con las que ningún pedido ahorraría lo mínimo. Lo que se carga en `/admin` se conserva al reiniciar la demo. Los proveedores de la demo son de ejemplo, no empresas reales.
+**Proveedores:** las tiendas ven en la pestaña *Proveedores* los proveedores verificados, sus productos y sus descuentos por volumen, y pueden abrir un pedido desde ahí. Los proveedores no se registran solos: el equipo los da de alta en `/admin` (misma clave del entrevistador) después de verificar la cotización escrita. Las categorías se administran ahí mismo y la cobertura se elige por localidad y barrio de Bogotá (`lib/bogota.ts`, generado del listado de barrios por UPZ de la Secretaría Distrital de Planeación). La base rechaza escalas con las que ningún pedido ahorraría lo mínimo. Lo que se carga en `/admin` se conserva al reiniciar la demo.
 
 ## Qué incluye (alcance)
 

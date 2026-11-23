@@ -389,3 +389,11 @@ textarea { min-block-size: auto; resize: vertical; }
 .fila-escala { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end; }
 .fila-escala label { display: grid; gap: 0.2rem; font-size: 0.88rem; font-weight: 600; }
 .admin input:user-invalid { border-color: var(--rojo-700); background: var(--rojo-100); }
+.fila-control { display: flex; gap: 0.5rem; align-items: center; }
+.fila-control > :first-child { flex: 1; }
+.zonas { border: 0; padding: 0; display: grid; gap: 0.5rem; }
+.escalones li.zona { display: inline-flex; align-items: center; gap: 0.3rem; }
+.quitar-zona {
+  border: 0; background: transparent; cursor: pointer; font: inherit; font-size: 1.1rem; line-height: 1;
+  color: var(--tinta-2); min-inline-size: 24px; min-block-size: 24px;
+}

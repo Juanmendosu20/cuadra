@@ -85,7 +85,7 @@ export function Ingreso({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
             enterKeyHint="go"
           />
           <span id={`${id}-pin-ayuda`} className="ayuda">
-            4 dígitos. En la demostración todas las tiendas usan <strong>1234</strong>.
+            4 dígitos. Todas las tiendas usan <strong>1234</strong>.
           </span>
         </div>
         {error && (

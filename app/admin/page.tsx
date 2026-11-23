@@ -5,6 +5,7 @@ import { rpc } from '@/lib/supabase';
 import { cop } from '@/lib/formato';
 import type { Proveedor } from '@/lib/tipos';
 import { Logo } from '@/components/Logo';
+import { LOCALIDADES } from '@/lib/bogota';
 
 type Aviso = { tipo: 'ok' | 'error'; texto: string } | null;
 type FilaEscala = { cajas: string; desc: string };
@@ -15,11 +16,17 @@ export default function Admin() {
   const id = useId();
   const [clave, setClave] = useState('');
   const [provs, setProvs] = useState<Proveedor[] | null>(null);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [aviso, setAviso] = useState<Aviso>(null);
   const [ocupado, setOcupado] = useState(false);
 
   async function cargar(c = clave) {
-    setProvs(await rpc<Proveedor[]>('admin_listar_proveedores', { p_clave: c }));
+    const [p, cats] = await Promise.all([
+      rpc<Proveedor[]>('admin_listar_proveedores', { p_clave: c }),
+      rpc<string[]>('admin_categorias', { p_clave: c }),
+    ]);
+    setProvs(p);
+    setCategorias(cats);
   }
 
   async function ejecutar(fn: () => Promise<unknown>, ok?: string) {
@@ -79,7 +86,7 @@ export default function Admin() {
         </span>
         <p>
           Lo que publiques aquí aparece al instante en la pestaña <strong>Proveedores</strong> de todas las tiendas y
-          se conserva al reiniciar la demo. Usa nombres de ejemplo mientras no haya un convenio firmado.
+          se conserva al reiniciar la demo.
         </p>
       </div>
 
@@ -89,6 +96,13 @@ export default function Admin() {
 
       <FormProveedor
         ocupado={ocupado}
+        categorias={categorias}
+        onCrearCategoria={(nombre) =>
+          ejecutar(async () => {
+            await rpc('admin_crear_categoria', { p_clave: clave, p_nombre: nombre });
+            await cargar();
+          }, `Categoría «${nombre}» creada.`)
+        }
         onCrear={(d) =>
           ejecutar(async () => {
             await rpc('admin_crear_proveedor', { p_clave: clave, ...d });
@@ -108,7 +122,6 @@ export default function Admin() {
                 <h3>{pv.nombre}</h3>
                 <p className="sub">
                   {pv.categoria} · {pv.cobertura} · flete {cop(pv.flete_por_entrega)}
-                  {pv.origen === 'demo' && ' · de la demo'}
                 </p>
               </div>
               {pv.productos.length === 0 && (
@@ -139,7 +152,9 @@ export default function Admin() {
                         · {p.empaque} · {cop(p.precio_lista_caja)} · meta mínima {p.objetivo_minimo ?? '—'} cajas
                       </span>
                     </span>
-                    {p.pedidos === 0 && (
+                    {p.pedidos > 0 ? (
+                      <span className="sub">Tiene pedidos: no se puede quitar</span>
+                    ) : (
                       <button
                         className="btn compacto peligro"
                         type="button"
@@ -197,45 +212,185 @@ export default function Admin() {
 
 function FormProveedor({
   ocupado,
+  categorias,
+  onCrearCategoria,
   onCrear,
 }: {
   ocupado: boolean;
+  categorias: string[];
+  onCrearCategoria: (nombre: string) => Promise<boolean>;
   onCrear: (d: { p_nombre: string; p_categoria: string; p_cobertura: string; p_flete: number }) => Promise<boolean>;
 }) {
   const id = useId();
+  const [localidad, setLocalidad] = useState('');
+  const [barrio, setBarrio] = useState('');
+  const [zonas, setZonas] = useState<{ localidad: string; barrio: string | null }[]>([]);
+  const [nuevaCat, setNuevaCat] = useState(false);
+  const [errorZona, setErrorZona] = useState('');
+  const barrios = LOCALIDADES.find((l) => l.nombre === localidad)?.barrios ?? [];
+
+  function agregarZona() {
+    if (!localidad) return;
+    const z = { localidad, barrio: barrio || null };
+    setZonas((zs) => {
+      // «Toda la localidad» reemplaza los barrios sueltos de esa localidad
+      const sin = z.barrio === null ? zs.filter((x) => x.localidad !== localidad) : zs;
+      if (sin.some((x) => x.localidad === z.localidad && (x.barrio === z.barrio || x.barrio === null))) return sin;
+      return [...sin, z];
+    });
+    setBarrio('');
+    setErrorZona('');
+  }
+
+  // «Kennedy: Timiza, Castilla · Bosa (toda la localidad)»
+  const cobertura = LOCALIDADES.map((l) => l.nombre)
+    .filter((n) => zonas.some((z) => z.localidad === n))
+    .map((n) => {
+      const zs = zonas.filter((z) => z.localidad === n);
+      return zs.some((z) => z.barrio === null) ? `${n} (toda la localidad)` : `${n}: ${zs.map((z) => z.barrio).join(', ')}`;
+    })
+    .join(' · ');
+
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!zonas.length) {
+      setErrorZona('Agrega al menos una zona de cobertura.');
+      return;
+    }
     const f = e.currentTarget;
     const d = new FormData(f);
     const ok = await onCrear({
       p_nombre: String(d.get('nombre')),
       p_categoria: String(d.get('categoria')),
-      p_cobertura: String(d.get('cobertura')),
+      p_cobertura: cobertura,
       p_flete: Number(d.get('flete')),
     });
-    if (ok) f.reset();
+    if (ok) {
+      f.reset();
+      setZonas([]);
+      setLocalidad('');
+    }
   }
+
+  async function crearCategoria() {
+    const input = document.getElementById(`${id}-nc`) as HTMLInputElement | null;
+    if (!input || !input.reportValidity()) return;
+    if (await onCrearCategoria(input.value)) {
+      input.value = '';
+      setNuevaCat(false);
+    }
+  }
+
   return (
     <form className="panel" onSubmit={enviar}>
       <h2 className="titulo-vista">Nuevo proveedor</h2>
       <div className="campo">
         <label htmlFor={`${id}-n`}>Nombre</label>
-        <span className="ayuda" id={`${id}-nh`}>Ej. «Distribuidora Zonal Kennedy (ejemplo)»</span>
+        <span className="ayuda" id={`${id}-nh`}>Ej. «Distribuidora Zonal Kennedy S.A.S.»</span>
         <input id={`${id}-n`} name="nombre" required minLength={3} maxLength={80} autoComplete="off" aria-describedby={`${id}-nh`} />
       </div>
+
       <div className="campo">
         <label htmlFor={`${id}-c`}>Categoría</label>
-        <input id={`${id}-c`} name="categoria" required maxLength={40} list={`${id}-cats`} autoComplete="off" />
-        <datalist id={`${id}-cats`}>
-          {['Abarrotes', 'Granos', 'Aseo', 'Lácteos', 'Bebidas', 'Panadería'].map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
+        <div className="fila-control">
+          <select id={`${id}-c`} name="categoria" required defaultValue="">
+            <option value="" disabled>
+              Elige una categoría
+            </option>
+            {categorias.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <button className="btn-texto" type="button" onClick={() => setNuevaCat((v) => !v)} aria-expanded={nuevaCat}>
+            + Nueva
+          </button>
+        </div>
+        {nuevaCat && (
+          <div className="fila-control">
+            <input
+              id={`${id}-nc`}
+              aria-label="Nombre de la nueva categoría"
+              placeholder="Ej. Frutas y verduras"
+              minLength={3}
+              maxLength={40}
+              required
+              autoComplete="off"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  crearCategoria();
+                }
+              }}
+            />
+            <button className="btn compacto" type="button" disabled={ocupado} onClick={crearCategoria}>
+              Crear
+            </button>
+          </div>
+        )}
       </div>
-      <div className="campo">
-        <label htmlFor={`${id}-z`}>Cobertura (barrios o localidades)</label>
-        <input id={`${id}-z`} name="cobertura" required maxLength={80} autoComplete="off" />
-      </div>
+
+      <fieldset className="campo zonas">
+        <legend>Cobertura</legend>
+        <span className="ayuda">Elige la localidad y, si no cubre toda, el barrio. Puedes agregar varias zonas.</span>
+        <div className="fila-escala">
+          <label>
+            <span>Localidad</span>
+            <select
+              value={localidad}
+              onChange={(e) => {
+                setLocalidad(e.target.value);
+                setBarrio('');
+              }}
+            >
+              <option value="">Elige…</option>
+              {LOCALIDADES.map((l) => (
+                <option key={l.nombre} value={l.nombre}>
+                  {l.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Barrio</span>
+            <select value={barrio} onChange={(e) => setBarrio(e.target.value)} disabled={!localidad}>
+              <option value="">Toda la localidad</option>
+              {barrios.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn compacto secundario" type="button" onClick={agregarZona} disabled={!localidad}>
+            Agregar
+          </button>
+        </div>
+        {zonas.length > 0 && (
+          <ul className="escalones" aria-label="Zonas agregadas">
+            {zonas.map((z) => (
+              <li key={`${z.localidad}-${z.barrio}`} className="zona">
+                {z.barrio ? `${z.barrio} (${z.localidad})` : `${z.localidad} completa`}
+                <button
+                  type="button"
+                  className="quitar-zona"
+                  aria-label={`Quitar ${z.barrio ?? z.localidad}`}
+                  onClick={() => setZonas((zs) => zs.filter((x) => x !== z))}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {errorZona && (
+          <p className="aviso error" role="alert">
+            {errorZona}
+          </p>
+        )}
+      </fieldset>
+
       <div className="campo">
         <label htmlFor={`${id}-f`}>Flete por entrega (pesos)</label>
         <span className="ayuda" id={`${id}-fh`}>Se reparte entre las tiendas del pedido según sus cajas.</span>
