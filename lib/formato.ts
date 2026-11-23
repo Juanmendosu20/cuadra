@@ -28,3 +28,12 @@ export const fechaHora = (iso: string) => fecha.format(new Date(iso));
 
 /** "1 caja", "3 cajas" */
 export const cajas = (n: number | null | undefined) => `${n ?? 0} ${Number(n) === 1 ? 'caja' : 'cajas'}`;
+
+/** Punto de entrega sin la marca «(dirección ficticia)» de los datos semilla. */
+export const lugar = (s: string | null | undefined) => (s ?? '').replace(/\s*\(direcci[oó]n ficticia\)/gi, '');
+
+/** Fecha y hora para cerrar una frase: evita el doble punto tras «p. m.». */
+export const fechaHoraFin = (iso: string | null | undefined) => {
+  const t = iso ? fechaHora(iso) : '';
+  return t.endsWith('.') ? t : `${t}.`;
+};

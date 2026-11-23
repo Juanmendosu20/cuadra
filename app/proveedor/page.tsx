@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { rpc, supabase } from '@/lib/supabase';
-import { cop, fechaHora, relativo, cajas as nCajas } from '@/lib/formato';
+import { cop, fechaHora, relativo, cajas as nCajas, lugar, fechaHoraFin } from '@/lib/formato';
 import { descuentoPara, explicarMeta, type Escalon, type ExplicacionMeta } from '@/lib/prorrateo';
 import type { PedidoProveedor, ProductoVitrina, Vitrina } from '@/lib/tipos';
 import { Logo } from '@/components/Logo';
@@ -300,7 +300,7 @@ function TarjetaDemanda({ p }: { p: PedidoProveedor }) {
         <header>
           <div>
             <h2 id={`d-${p.id}`}>{p.producto}</h2>
-            <p className="sub">{p.barrio} · entrega en {p.punto_acopio}</p>
+            <p className="sub">{p.barrio} · entrega en {lugar(p.punto_acopio)}</p>
           </div>
           <span className={`etiqueta ${p.estado}`}>{ETIQUETA[p.estado]}</span>
         </header>
@@ -335,8 +335,8 @@ function TarjetaDemanda({ p }: { p: PedidoProveedor }) {
             </dl>
             <span className="sub">
               {p.estado === 'entregado' && p.entregado_en
-                ? `Entregado el ${fechaHora(p.entregado_en)}.`
-                : `Una sola entrega en ${p.punto_acopio}. ${p.retirados} de ${p.tiendas} tiendas ya recogieron.`}
+                ? `Entregado el ${fechaHoraFin(p.entregado_en)}`
+                : `Una sola entrega en ${lugar(p.punto_acopio)}. ${p.retirados} de ${p.tiendas} tiendas ya recogieron.`}
             </span>
           </div>
         )}
