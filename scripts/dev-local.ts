@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 
 const base = spawn(process.execPath, ['scripts/base-local.ts'], { stdio: 'inherit' });
 
-const app = spawn('npx', ['next', 'dev', '-p', '3000'], {
+const app = spawn('npx next dev -p 3000', {
   stdio: 'inherit',
   shell: true,
   env: {
