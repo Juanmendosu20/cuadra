@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { rpc, supabase } from '@/lib/supabase';
 import { cop, fechaHora, cajas as nCajas } from '@/lib/formato';
-import type { Movimiento, Pedido, Producto, Sesion } from '@/lib/tipos';
+import type { Movimiento, Pedido, Producto, Proveedor, Sesion } from '@/lib/tipos';
+import { ListaProveedores } from '@/components/ListaProveedores';
 import { Ingreso } from '@/components/Ingreso';
 import { Logo } from '@/components/Logo';
 import { TarjetaPedido } from '@/components/TarjetaPedido';
@@ -16,6 +17,7 @@ import {
   IconoHistorial,
   IconoMas,
   IconoPedidos,
+  IconoProveedores,
   IconoRegistro,
   IconoSinSenal,
 } from '@/components/Iconos';
@@ -23,7 +25,7 @@ import {
 const CLAVE = 'cuadra.sesion';
 const CLAVE_GUIA = 'cuadra.guia-vista';
 
-type Vista = 'abiertos' | 'historial' | 'movimientos';
+type Vista = 'abiertos' | 'proveedores' | 'historial' | 'movimientos';
 
 function textoMovimiento(m: Movimiento): string {
   const d = m.detalle ?? {};
@@ -113,6 +115,8 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [sumarse, setSumarse] = useState<Pedido | null>(null);
   const [entrega, setEntrega] = useState<Pedido | null>(null);
   const [abrir, setAbrir] = useState(false);
+  const [productoInicial, setProductoInicial] = useState<string | null>(null);
+  const [proveedores, setProveedores] = useState<Proveedor[] | null>(null);
   const [guia, setGuia] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -161,6 +165,9 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         rpc<Pedido[]>('listar_pedidos', { p_token: token }),
         rpc<Movimiento[]>('mis_movimientos', { p_token: token }),
       ]);
+      // Directorio y catálogo: cambian cuando el administrador carga un proveedor
+      rpc<Proveedor[]>('listar_proveedores', { p_token: token }).then(setProveedores).catch(() => {});
+      rpc<Producto[]>('catalogo', { p_token: token }).then(setCatalogo).catch(() => {});
       setPedidos(p);
       setMovs(m);
       setError('');
@@ -329,7 +336,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
               <div className="encabezado-vista">
                 <h1 className="titulo-vista">Pedidos en tu zona</h1>
                 {abiertos.length > 0 && (
-                  <button className="btn-abrir" type="button" onClick={() => setAbrir(true)} disabled={!catalogo.length}>
+                  <button className="btn-abrir" type="button" onClick={() => { setProductoInicial(null); setAbrir(true); }} disabled={!catalogo.length}>
                     <IconoMas size={20} />
                     Abrir pedido
                   </button>
@@ -340,7 +347,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
                 <div className="estado-vacio">
                   <IconoPedidos size={40} />
                   <p>No hay pedidos abiertos a menos de 1,5 km.</p>
-                  <button className="btn" type="button" onClick={() => setAbrir(true)} disabled={!catalogo.length}>
+                  <button className="btn" type="button" onClick={() => { setProductoInicial(null); setAbrir(true); }} disabled={!catalogo.length}>
                     Abrir el primero
                   </button>
                 </div>
@@ -348,6 +355,16 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
                 tarjetas(abiertos)
               )}
             </>
+          )}
+
+          {pedidos && vista === 'proveedores' && (
+            <ListaProveedores
+              proveedores={proveedores}
+              onAbrir={(idProducto) => {
+                setProductoInicial(idProducto);
+                setAbrir(true);
+              }}
+            />
           )}
 
           {pedidos && vista === 'historial' && (
@@ -399,6 +416,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         {(
           [
             ['abiertos', 'Pedidos', IconoPedidos, abiertos.length],
+            ['proveedores', 'Proveedores', IconoProveedores, 0],
             ['historial', 'Historial', IconoHistorial, 0],
             ['movimientos', 'Movimientos', IconoRegistro, 0],
           ] as const
@@ -431,7 +449,11 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         abierto={abrir}
         catalogo={catalogo}
         tienda={sesion.tienda.nombre}
-        onCerrar={() => setAbrir(false)}
+        productoInicial={productoInicial}
+        onCerrar={() => {
+          setAbrir(false);
+          setProductoInicial(null);
+        }}
         onConfirmar={confirmarAbrir}
       />
       <GuiaInicio abierto={guia} onCerrar={cerrarGuia} />

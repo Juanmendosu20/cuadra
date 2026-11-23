@@ -70,3 +70,12 @@ export const IconoSinSenal = ({ size = 24 }: P) => (
     <path d="M3 3l18 18" />
   </svg>
 );
+
+export const IconoProveedores = ({ size = 24 }: P) => (
+  <svg {...base(size)}>
+    <path d="M1 6h13v10H1z" />
+    <path d="M14 10h4l3 3v3h-7" />
+    <circle cx="5.5" cy="18" r="1.8" />
+    <circle cx="17.5" cy="18" r="1.8" />
+  </svg>
+);

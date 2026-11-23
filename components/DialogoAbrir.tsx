@@ -18,19 +18,22 @@ export function DialogoAbrir({
   abierto,
   catalogo,
   tienda,
+  productoInicial,
   onCerrar,
   onConfirmar,
 }: {
   abierto: boolean;
   catalogo: Producto[];
   tienda: string;
+  /** Producto preseleccionado (desde la pestaña Proveedores) */
+  productoInicial?: string | null;
   onCerrar: () => void;
   onConfirmar: (d: DatosNuevoPedido) => Promise<void>;
 }) {
   const id = useId();
   return (
     <Dialogo abierto={abierto} onCerrar={onCerrar} tituloId={`${id}-t`}>
-      <Formulario catalogo={catalogo} tienda={tienda} tituloId={`${id}-t`} onCerrar={onCerrar} onConfirmar={onConfirmar} />
+      <Formulario catalogo={catalogo} tienda={tienda} productoInicial={productoInicial} tituloId={`${id}-t`} onCerrar={onCerrar} onConfirmar={onConfirmar} />
     </Dialogo>
   );
 }
@@ -38,17 +41,21 @@ export function DialogoAbrir({
 function Formulario({
   catalogo,
   tienda,
+  productoInicial,
   tituloId,
   onCerrar,
   onConfirmar,
 }: {
   catalogo: Producto[];
   tienda: string;
+  productoInicial?: string | null;
   tituloId: string;
   onCerrar: () => void;
   onConfirmar: (d: DatosNuevoPedido) => Promise<void>;
 }) {
-  const [productoId, setProductoId] = useState(catalogo[0]?.id ?? '');
+  const [productoId, setProductoId] = useState(
+    (productoInicial && catalogo.some((c) => c.id === productoInicial) ? productoInicial : catalogo[0]?.id) ?? '',
+  );
   const prod = catalogo.find((c) => c.id === productoId);
   const [objetivo, setObjetivo] = useState<number>(prod?.objetivo_minimo ?? 1);
   const [misCajas, setMisCajas] = useState(3);

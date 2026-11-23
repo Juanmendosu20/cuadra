@@ -87,7 +87,7 @@ button { touch-action: manipulation; }
 /* ---------- navegación inferior (zona del pulgar) ---------- */
 .nav-inferior {
   position: fixed; inset-inline: 0; inset-block-end: 0; z-index: 5;
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(4, 1fr);
   padding-block-end: var(--seguro-abajo);
   background: var(--papel); border-block-start: 1px solid var(--linea);
   box-shadow: 0 -4px 16px rgb(15 61 42 / 0.06);
@@ -372,3 +372,20 @@ dialog .pie { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: 
 .encuesta form h2:first-child { margin-block-start: 0; }
 .encuesta form h3 { margin-block: 1.25rem 0.25rem; font-size: 1.05rem; }
 textarea { min-block-size: auto; resize: vertical; }
+
+/* ---------- proveedores ---------- */
+.lista-tarjetas { display: grid; gap: 1rem; }
+.productos-proveedor { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.85rem; }
+.productos-proveedor > li { display: grid; gap: 0.4rem; padding-block-start: 0.75rem; border-block-start: 1px solid var(--linea); }
+.fila-producto { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.tarjeta h3 { font-size: 1.05rem; }
+
+/* ---------- panel de administración ---------- */
+.admin .panel { margin-block-end: 1rem; }
+.nuevo-producto { border-block-start: 1px solid var(--linea); padding-block-start: 0.75rem; }
+.nuevo-producto summary { cursor: pointer; font-weight: 700; color: var(--verde-700); min-block-size: 44px; display: flex; align-items: center; }
+.nuevo-producto form { padding-block-start: 0.75rem; }
+.escalas-form { border: 0; padding: 0; display: grid; gap: 0.5rem; }
+.fila-escala { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end; }
+.fila-escala label { display: grid; gap: 0.2rem; font-size: 0.88rem; font-weight: 600; }
+.admin input:user-invalid { border-color: var(--rojo-700); background: var(--rojo-100); }

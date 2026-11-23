@@ -76,3 +76,24 @@ export type ItemEntrega = {
   cajas: number;
   retirado_en: string | null;
 };
+
+export type ProductoProveedor = {
+  id: string;
+  nombre: string;
+  empaque: string;
+  precio_lista_caja: number;
+  objetivo_minimo: number | null;
+  pedidos: number;
+  escalas: Escalon[];
+};
+
+/** Proveedor verificado por el equipo (lo carga el administrador en /admin). */
+export type Proveedor = {
+  id: string;
+  nombre: string;
+  categoria: string;
+  cobertura: string;
+  flete_por_entrega: number;
+  origen: 'demo' | 'admin';
+  productos: ProductoProveedor[];
+};
