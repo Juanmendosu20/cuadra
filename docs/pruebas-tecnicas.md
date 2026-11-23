@@ -99,3 +99,7 @@ Auditoría con Lighthouse 12 (modo celular) sobre la versión compilada para pro
 Primer contenido visible en 0,8 s y desplazamiento de diseño 0. Además, **axe-core** no encontró problemas de accesibilidad (WCAG 2.1 AA) en ninguna de las 7 pantallas: ingreso, guía, pedidos, sumarse, historial con la explicación del cobro, lista de entrega y movimientos.
 
 **Limitación:** las mediciones son en local con una base en memoria; en el despliegue real los tiempos dependen de la red y de Supabase.
+
+## 8. Vista de proveedor (vitrina de demostración)
+
+`tests/vitrina.test.ts` (5 pruebas, aprobadas): el proveedor ve la demanda agregada de sus productos con el valor de la orden cuadrado al peso y la comisión del 3 %, sin ningún nombre ni volumen de tienda; una oferta publicada aparece en el directorio y en el catálogo de las tiendas; no puede tocar productos base ni pasar de 5 ofertas; escalas que no ahorran de verdad se rechazan; una oferta con pedidos no se puede retirar; reiniciar la demo borra las ofertas de la vitrina. axe-core: sin problemas de accesibilidad en la entrada, la lista de tiendas, la demanda, las ofertas y el formulario de oferta.

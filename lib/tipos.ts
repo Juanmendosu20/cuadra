@@ -97,3 +97,45 @@ export type Proveedor = {
   origen: 'demo' | 'admin';
   productos: ProductoProveedor[];
 };
+
+/** Vista de proveedor de la demostración (vitrina_proveedor). */
+export type PedidoProveedor = {
+  id: string;
+  estado: EstadoPedido;
+  producto: string;
+  empaque: string;
+  precio_lista_caja: number;
+  cajas_objetivo: number;
+  fecha_cierre: string;
+  cerrado_en: string | null;
+  entregado_en: string | null;
+  punto_acopio: string;
+  anfitriona: string;
+  barrio: string;
+  flete_total: number;
+  precio_caja_final: number | null;
+  descuento: number;
+  total_cajas: number;
+  tiendas: number;
+  retirados: number;
+  valor_mercancia: number | null;
+  valor_orden: number | null;
+  comision: number | null;
+};
+
+export type ProductoVitrina = ProductoProveedor & { origen: 'base' | 'vitrina' };
+
+export type Vitrina = {
+  proveedor: { id: string; nombre: string; categoria: string; cobertura: string; flete_por_entrega: number };
+  productos: ProductoVitrina[];
+  pedidos: PedidoProveedor[];
+  resumen: {
+    abiertos: number;
+    por_despachar: number;
+    entregados: number;
+    cajas_vendidas: number;
+    ventas: number;
+    comision: number;
+    tiendas_en_curso: number;
+  };
+};

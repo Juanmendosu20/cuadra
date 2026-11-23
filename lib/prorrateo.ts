@@ -51,3 +51,18 @@ export function estimarPago(opts: {
   const solo = misCajas * precioLista;
   return { descuento, precioCaja, mercancia, flete, total, solo, ahorro: solo - total };
 }
+
+/**
+ * Meta mínima de cajas con la que un pedido conjunto ahorra de verdad (misma regla que
+ * interno.objetivo_minimo en Postgres): al menos −5 %, pedido de $1.500.000 o más, y que el
+ * flete quepa en el ahorro con un peso de margen. null si ninguna meta hasta 1000 cajas sirve.
+ * Solo para la vista previa: la base de datos vuelve a validar.
+ */
+export function objetivoMinimo(escalas: Escalon[], precioLista: number, flete: number): number | null {
+  for (let c = 1; c <= 1000; c++) {
+    const d = descuentoPara(escalas, c);
+    const precio = Math.round(precioLista * (1 - d / 100));
+    if (d >= 5 && c * precioLista * (1 - d / 100) >= 1_500_000 && flete <= c * (precioLista - precio - 1)) return c;
+  }
+  return null;
+}
