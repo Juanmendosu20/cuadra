@@ -25,3 +25,6 @@ const fecha = new Intl.DateTimeFormat('es-CO', {
 });
 
 export const fechaHora = (iso: string) => fecha.format(new Date(iso));
+
+/** "1 caja", "3 cajas" */
+export const cajas = (n: number | null | undefined) => `${n ?? 0} ${Number(n) === 1 ? 'caja' : 'cajas'}`;

@@ -12,8 +12,9 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 2. Elige una tienda de **Timiza** y entra con el PIN **1234**.
 3. En *Abiertos* verás los pedidos a menos de 1,5 km. Toca **Sumarme al pedido**, elige cajas y reserva.
 4. Entra con otra tienda (otra pestaña o el celular) y mira cómo la barra de avance se actualiza sola.
-5. Con la tienda anfitriona (p. ej. *Tienda Doña Rosa* para el arroz) usa **Cerrar ahora (demo)** para ver la liquidación en *Historial*.
-6. Las tiendas de **Suba** no ven los pedidos de Timiza (filtro por zona).
+5. Con la tienda anfitriona (p. ej. *Tienda Doña Rosa* para el arroz) usa **Cerrar ahora (demo)** para ver la liquidación en *Historial*. Abre **¿Cómo se calculó mi cobro?** para ver el paso a paso y el sello «Cuadra al peso».
+6. Con *Autoservicio El Vecino* (anfitriona de la gaseosa, ya confirmada) abre **Lista de entrega** y marca a cada tienda cuando recoge: al marcarlas todas, el pedido pasa a **Entregado**.
+7. Las tiendas de **Suba** no ven los pedidos de Timiza (filtro por zona).
 
 **Para entrevistas:** en `/facilitador` hay un botón que reinicia la demo (arroz en 18 de 30 cajas) con la clave del entrevistador, para que cada participante empiece igual. La clave no está en el repositorio.
 
@@ -21,12 +22,16 @@ Tiendas vecinas abren o se suman a un **pedido conjunto** de un producto; si ant
 
 | Incluido | Fuera de alcance |
 |---|---|
+| Ciclo completo: abierto → confirmado → entregado (o anulado) |  |
 | Abrir un pedido conjunto con meta, ventana de cierre y punto de entrega | Pago real (PSE/Nequi): se simula retener, liberar y devolver |
 | Sumarse, cambiar cajas o retirarse, con avance en tiempo real | Notificaciones reales por WhatsApp |
 | Precio escalonado del mayorista y regla de ahorro neto mínimo | Logística y ruteo de la entrega |
 | Cierre todo-o-nada y reparto del flete (método del mayor residuo) | Registro abierto de tiendas y verificación de identidad |
 | Filtro geográfico (Haversine, radio 1,5 km) | Panel del proveedor |
 | Registro auditable de cada acción | |
+| Lista de entrega para la anfitriona y explicación del cobro paso a paso | |
+| Control de retención: ningún cobro supera lo retenido al reservar | |
+| App instalable (PWA) con página «Sin conexión» | |
 
 ## Arquitectura
 
@@ -44,6 +49,8 @@ Supabase
 - **Concurrencia**: `sumarse` bloquea la fila del pedido (`SELECT … FOR UPDATE`), así varias tiendas que se suman al tiempo no pueden pasar del cupo máximo ni duplicar participaciones (`UNIQUE (pedido_id, tienda_id)`).
 - **Cierre**: `interno.cerrar()` aplica la regla todo-o-nada, calcula el descuento por el volumen final y reparte el flete en pesos enteros con el método del mayor residuo (la suma es exacta).
 - **Regla de ahorro neto** (Entrega 1, §9.4): no se puede abrir un pedido cuya meta no dé al menos −5% y $1.500.000.
+- **Control de retención**: al reservar se retiene cajas × precio de lista. Al abrir se exige que el flete quepa en el ahorro de la meta (con un peso de margen por redondeo); como el descuento solo sube y el flete por caja solo baja con más volumen, ningún cobro final puede superar lo retenido. Si por cualquier motivo pasara, `interno.cerrar()` anula el pedido y devuelve todo.
+- **Entrega**: `lista_entrega` es la única función que devuelve cajas por tienda, y solo a la anfitriona de un pedido confirmado (quien entrega necesita saberlo). Cuando marca a todas, el pedido queda `entregado`.
 
 ## Estructura
 
@@ -52,7 +59,8 @@ app/                 páginas Next.js (App Router)
 components/          tarjetas y diálogos
 lib/                 cliente Supabase, formato, prorrateo (estimaciones)
 supabase/migrations/ esquema, lógica, datos demo
-tests/               pruebas del prorrateo
+scripts/             base local para desarrollar o demostrar sin internet
+tests/               pruebas del prorrateo y de la lógica en Postgres
 ```
 
 ## Ejecutar en local
@@ -61,8 +69,20 @@ tests/               pruebas del prorrateo
 npm install
 cp .env.example .env.local   # pon la URL y la llave publicable de tu proyecto Supabase
 npm run dev                  # http://localhost:3000
-npm test                     # pruebas del prorrateo
+npm test                     # 11 pruebas: prorrateo, 10.000 escenarios y lógica en Postgres
 ```
+
+### Sin Supabase ni internet
+
+```bash
+npm run dev:local            # (Windows, Mac o Linux; Node 22.18+) base en memoria con las migraciones reales + app en http://localhost:3000
+```
+
+Corre las migraciones sobre Postgres en memoria (PGlite) con los datos demo. La clave de `/facilitador` en local es `local`. Sirve de respaldo para la sustentación si falla la conexión.
+
+### Actualizar la base de producción
+
+Ejecuta en el editor SQL de Supabase, **en este orden y antes de publicar la app nueva**: `006_estado_entregado.sql` y luego `007_entrega_y_retencion.sql`. Son compatibles con la versión anterior de la app.
 
 Para montar la base en otro proyecto Supabase, ejecuta en orden los archivos de `supabase/migrations/` en el editor SQL.
 

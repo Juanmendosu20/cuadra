@@ -20,6 +20,8 @@ export default function Facilitador() {
       await rpc('reiniciar_demo', { p_clave: clave });
       try {
         localStorage.removeItem('cuadra.sesion');
+        // Que el siguiente participante también vea la guía «Así funciona», igual que el anterior
+        localStorage.removeItem('cuadra.guia-vista');
       } catch {}
       const hora = new Intl.DateTimeFormat('es-CO', { timeStyle: 'short', timeZone: 'America/Bogota' }).format(new Date());
       setEstado({ tipo: 'ok', texto: `Demo reiniciada (${hora}). El arroz está en 18 de 30 cajas: ya puede pasar el siguiente participante.` });

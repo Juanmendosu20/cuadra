@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "base:local": "node scripts/base-local.ts",
+    "dev:local": "node scripts/dev-local.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",
@@ -16,9 +18,14 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.17",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "^5"
-  }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "type": "module"
 }
